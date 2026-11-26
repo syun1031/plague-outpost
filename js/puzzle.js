@@ -111,6 +111,91 @@ export function countSolutions(rows, cols, total, roles, limit = 2) {
   return found;
 }
 
+/**
+ * 模擬玩家的邏輯推理（不猜測），回傳能否解開與用到的最高規則等級
+ * 等級 1：單一線索直接推出（剩下的格子要嘛全感染、要嘛全健康）
+ * 等級 2：兩條線索相減（一條的範圍包含另一條，差集可直接判斷）
+ */
+export function logicSolve(rows, cols, total, roles, maxLevel = 2) {
+  const n = rows * cols;
+  const val = new Int8Array(n).fill(-1);
+  for (const idx of roles.keys()) val[idx] = 0;
+  for (const clue of roles.values()) if (SAFE_TYPES.has(clue.type)) val[clue.tr * cols + clue.tc] = 0;
+  const cons = [];
+  for (const clue of roles.values()) {
+    if (!COUNT_TYPES.has(clue.type)) continue;
+    cons.push({ cells: clueRange(clue, rows, cols).map(([r, c]) => r * cols + c), value: clue.value });
+  }
+  cons.push({ cells: [...Array(n).keys()], value: total });
+
+  let level = 0;
+  const view = (k) => {
+    const unk = [];
+    let ones = 0;
+    for (const i of k.cells) { if (val[i] === 1) ones++; else if (val[i] === -1) unk.push(i); }
+    return { unk, need: k.value - ones };
+  };
+  for (;;) {
+    let progress = false;
+    for (const k of cons) {
+      const { unk, need } = view(k);
+      if (!unk.length) continue;
+      if (need === 0 || need === unk.length) {
+        for (const i of unk) val[i] = need === 0 ? 0 : 1;
+        progress = true;
+      }
+    }
+    if (progress) { level = Math.max(level, 1); continue; }
+    if (maxLevel >= 2) {
+      const views = cons.map(view).filter((v) => v.unk.length);
+      outer: for (const a of views) {
+        const setA = new Set(a.unk);
+        for (const b of views) {
+          if (a === b || b.unk.length <= a.unk.length) continue;
+          if (!a.unk.every((i) => b.unk.includes(i))) continue;
+          const rest = b.unk.filter((i) => !setA.has(i));
+          const d = b.need - a.need;
+          if (d === 0 || d === rest.length) {
+            for (const i of rest) val[i] = d === 0 ? 0 : 1;
+            progress = true;
+            break outer;
+          }
+        }
+      }
+      if (progress) { level = 2; continue; }
+    }
+    break;
+  }
+  return { solved: !val.includes(-1), level };
+}
+
+export const DIFFICULTY = {
+  easy:   { name: '簡單', reduce: 0.45 },
+  normal: { name: '普通', reduce: 1 },
+  hard:   { name: '困難', reduce: 1 },
+};
+
+/**
+ * 依難度產生謎題（同樣的 seed 一定產生同一題，可用於每日題）
+ * 簡單：只靠單一線索就能解完
+ * 普通：需要用到「兩條線索相減」，但不需要猜
+ * 困難：以上兩種規則解不完，需要更深的推理（假設與排除）
+ */
+export function generateByDifficulty({ rows, cols, infected, difficulty = 'normal', seed = Date.now() }) {
+  const { reduce } = DIFFICULTY[difficulty];
+  let fallback = null;
+  for (let k = 0; k < 120; k++) {
+    const p = generatePuzzle({ rows, cols, infected, reduce, seed: seed + k * 101 });
+    const r = logicSolve(rows, cols, infected, p.roles, 2);
+    p.difficulty = difficulty;
+    if (difficulty === 'easy' && r.solved && r.level <= 1) return p;
+    if (difficulty === 'normal' && r.solved && r.level === 2) return p;
+    if (difficulty === 'hard' && !r.solved) return p;
+    if (!fallback && (difficulty !== 'easy' || r.solved)) fallback = p;
+  }
+  return fallback || generatePuzzle({ rows, cols, infected, reduce, seed });
+}
+
 function shuffle(a, rnd) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
