@@ -1,0 +1,9 @@
+{
+  "name": "plague-outpost",
+  "private": true,
+  "type": "module",
+  "description": "暗疫陣地：找出所有感染者的網頁推理小遊戲",
+  "engines": {
+    "node": ">=18"
+  }
+}

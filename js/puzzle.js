@@ -181,11 +181,12 @@ export const DIFFICULTY = {
  * 普通：需要用到「兩條線索相減」，但不需要猜
  * 困難：以上兩種規則解不完，需要更深的推理（假設與排除）
  */
-export function generateByDifficulty({ rows, cols, infected, difficulty = 'normal', seed = Date.now() }) {
+export function generateByDifficulty({ rows, cols, infected, difficulty = 'normal', seed = Date.now(), types, mustInclude }) {
   const { reduce } = DIFFICULTY[difficulty];
   let fallback = null;
   for (let k = 0; k < 120; k++) {
-    const p = generatePuzzle({ rows, cols, infected, reduce, seed: seed + k * 101 });
+    const p = generatePuzzle({ rows, cols, infected, reduce, seed: seed + k * 101, types, mustInclude });
+    if (mustInclude && ![...p.roles.values()].some((c) => c.type === mustInclude)) continue;
     const r = logicSolve(rows, cols, infected, p.roles, 2);
     p.difficulty = difficulty;
     if (difficulty === 'easy' && r.solved && r.level <= 1) return p;
@@ -193,7 +194,7 @@ export function generateByDifficulty({ rows, cols, infected, difficulty = 'norma
     if (difficulty === 'hard' && !r.solved) return p;
     if (!fallback && (difficulty !== 'easy' || r.solved)) fallback = p;
   }
-  return fallback || generatePuzzle({ rows, cols, infected, reduce, seed });
+  return fallback || generatePuzzle({ rows, cols, infected, reduce, seed, types, mustInclude });
 }
 
 function shuffle(a, rnd) {
@@ -242,9 +243,13 @@ function buildClue(type, r, c, rows, cols, infected, roles, rnd) {
  * 產生一題唯一解的謎題
  * @param {{rows:number, cols:number, infected:number, reduce?:number, seed?:number}} opt
  *   reduce：0~1，移除多餘線索的比例（越高越難）
+ *   types：可出現的角色（教學關卡用），預設全部
+ *   mustInclude：一定要出現的角色，刪線索時會保留至少一位
  */
-export function generatePuzzle({ rows, cols, infected: total, reduce = 1, seed = Date.now() }) {
+export function generatePuzzle({ rows, cols, infected: total, reduce = 1, seed = Date.now(), types: allowed, mustInclude }) {
   const rnd = mulberry32(seed);
+  const types = Object.keys(TYPE_WEIGHT).filter((t) => !allowed || allowed.includes(t));
+  const fallbackType = types.find((t) => COUNT_TYPES.has(t)) || 'doctor';
   const n = rows * cols;
   for (let attempt = 0; attempt < 200; attempt++) {
     const infected = new Set(shuffle([...Array(n).keys()], rnd).slice(0, total));
@@ -258,13 +263,12 @@ export function generatePuzzle({ rows, cols, infected: total, reduce = 1, seed =
       if (!free.length) break;
       const idx = free[Math.floor(rnd() * free.length)];
       // 依權重挑角色，還沒出現過的角色權重加倍，讓盤面角色多樣
-      const types = Object.keys(TYPE_WEIGHT);
       const w = types.map((t) => TYPE_WEIGHT[t] * (usedTypes.has(t) ? 1 : 3));
       let pick = rnd() * w.reduce((a, b) => a + b, 0);
       let ti = 0;
       while ((pick -= w[ti]) > 0) ti++;
       let clue = buildClue(types[ti], Math.floor(idx / cols), idx % cols, rows, cols, infected, roles, rnd);
-      if (!clue) clue = buildClue('doctor', Math.floor(idx / cols), idx % cols, rows, cols, infected, roles, rnd);
+      if (!clue) clue = buildClue(fallbackType, Math.floor(idx / cols), idx % cols, rows, cols, infected, roles, rnd);
       roles.set(idx, clue);
       usedTypes.add(clue.type);
       unique = countSolutions(rows, cols, total, roles) === 1;
@@ -276,6 +280,7 @@ export function generatePuzzle({ rows, cols, infected: total, reduce = 1, seed =
     for (const k of keys) {
       if (rnd() > reduce) continue;
       const clue = roles.get(k);
+      if (clue.type === mustInclude && [...roles.values()].filter((c) => c.type === mustInclude).length === 1) continue;
       // 若其他偵查類角色指定此格為健康，移除後會讓那條線索指向角色以外的格子 → 仍合法
       roles.delete(k);
       if (countSolutions(rows, cols, total, roles) !== 1) roles.set(k, clue);

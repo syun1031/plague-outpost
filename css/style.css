@@ -307,3 +307,56 @@ button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ───── 指揮官名字 ───── */
+.welcome { font-family: var(--serif); font-weight: 700; margin: 8px 0 0; color: var(--stamp); }
+.name-field { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; background: var(--paper); border: 2px solid var(--ink); border-radius: 4px; padding: 6px 12px; }
+.name-label { font-family: var(--serif); font-weight: 700; font-size: .9rem; }
+.name-field input { font: inherit; font-weight: 900; font-size: 1.15rem; width: 9em; border: 0; border-bottom: 2px dashed rgba(43,40,30,.45); background: transparent; color: var(--ink); padding: 2px 4px; }
+.name-field input:focus { outline: none; border-bottom-color: var(--stamp); }
+.name-rank { font-weight: 700; color: var(--ink-soft); }
+.name-hint { margin: 6px 0 0; font-size: .78rem; color: var(--ink-soft); font-family: var(--serif); }
+
+/* 開始畫面次要按鈕（教學、排行榜） */
+.side-actions { display: flex; gap: 10px; margin-left: auto; align-items: stretch; }
+.ghost-ink { background: transparent; color: var(--ink); border: 2px solid rgba(43,40,30,.45); border-radius: 6px; padding: 8px 16px; font-weight: 700; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
+.ghost-ink small { font-size: .7rem; font-weight: 500; color: var(--ink-soft); }
+.ghost-ink:hover { border-color: var(--ink); background: rgba(241,232,210,.5); }
+
+/* ───── 教學：新角色介紹 ───── */
+.modal-card.wide { width: min(560px, 94vw); }
+.modal-card { max-height: 92vh; overflow-y: auto; }
+.intro { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: start; }
+.intro-art { width: 120px; height: 120px; background: var(--paper); border: 2px solid var(--ink); border-radius: 6px; box-shadow: 4px 4px 0 var(--kraft); padding: 6px; }
+.intro-art svg { width: 100%; height: 100%; overflow: visible; }
+.intro h3 { margin: 0 0 4px; font-size: 1.3rem; font-weight: 900; }
+.intro .skill { margin: 0 0 8px; font-weight: 700; color: var(--stamp); font-family: var(--sans); line-height: 1.5; }
+.intro .tip { margin: 8px 0 0; font-size: .9rem; line-height: 1.7; }
+.range-demo { display: grid; grid-template-columns: repeat(5, 22px); gap: 3px; margin-top: 4px; }
+.range-demo span { width: 22px; height: 22px; border-radius: 3px; background: var(--sand); display: grid; place-items: center; font-size: .7rem; font-weight: 900; }
+.range-demo .me { background: var(--ink); color: var(--paper); }
+.range-demo .hit { background: #f08070; box-shadow: inset 0 0 0 2px var(--stamp); }
+.basics { margin: 14px 0 0; padding: 10px 14px; background: rgba(214,192,149,.45); border-left: 4px solid var(--ink); font-size: .9rem; line-height: 1.8; }
+.tut-progress { display: flex; gap: 4px; margin: 0 0 12px; }
+.tut-progress i { flex: 1; height: 6px; border-radius: 3px; background: rgba(43,40,30,.15); }
+.tut-progress i.done { background: var(--ok); }
+.tut-progress i.now { background: var(--hazard); }
+
+/* ───── 排行榜 ───── */
+.lb-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.lb-tabs button { background: transparent; border: 2px solid rgba(43,40,30,.3); border-radius: 6px; padding: 4px 12px; font-weight: 700; color: var(--ink); }
+.lb-tabs button.selected { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.lb-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.lb-table th { text-align: left; font-size: .78rem; color: var(--ink-soft); border-bottom: 2px solid var(--ink); padding: 4px 6px; }
+.lb-table td { padding: 5px 6px; border-bottom: 1px dashed rgba(43,40,30,.25); }
+.lb-table td:first-child { width: 3em; font-weight: 900; }
+.lb-table td:last-child { text-align: right; font-weight: 700; }
+.lb-table tr.me td { background: rgba(233,184,36,.3); }
+.lb-msg { font-family: var(--serif); color: var(--ink-soft); padding: 10px 0; line-height: 1.7; }
+.lb-mine { margin-top: 10px; font-weight: 700; }
+#rankInfo { display: block; margin-top: 4px; font-weight: 700; }
+
+@media (max-width: 900px) {
+  .side-actions { margin-left: 0; }
+  .intro { grid-template-columns: 1fr; }
+}

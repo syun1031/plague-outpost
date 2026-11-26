@@ -19,6 +19,15 @@
 - **音樂與音效**：右上角可以分別開關，設定會記在瀏覽器裡。
 - **今日任務**：固定 5×5 普通難度，以台灣日期當種子，同一天所有人玩到同一題。最快紀錄存在瀏覽器裡。
 
+## 指揮官、教學與排行榜
+- **指揮官名字**：開始畫面可以替指揮官取名，留空就用預設的「霍克」或「薇拉」。名字、選的指揮官和教學進度都記在瀏覽器裡，下次打開會說「歡迎回來」。
+- **教學模式（6 關）**：每關開始前先介紹一位新隊員，依人員檔案順序加入：醫生 → 哨兵 → 偵查兵 → 雷達兵 → 巡邏兵 → 工兵。第 1 關只有醫生，第 6 關六種隊員都會出現。題目固定為 4×4 簡單難度。
+  - 第一次玩的人按「開始作戰」時會被建議先走教學，也可以直接跳過；教學中右上角也有「跳過教學」。
+  - 已經玩過的人（瀏覽器裡已有本遊戲紀錄）不會再被帶進教學，想重玩可以按簡報上的「教學」。
+- **排行榜**：只收困難難度，3 種陣地 × 2 種模式，共 6 個排行榜，以最佳用時排名。
+  - 伺服器會用同一個題目編號重新產生題目，確認上傳的答案正確才收下。用時只做合理範圍檢查。
+  - 需要在 Vercel 連接 Upstash Redis 才會啟用，沒接之前遊戲會顯示「全球排行榜尚未開通」，只保存這台裝置上的個人最佳。
+
 ## 角色
 | 角色 | 技能 | 從上方辨認的特徵 |
 |---|---|---|
@@ -43,8 +52,14 @@ python -m http.server 5173
 - `js/fx.js`：Canvas 特效，包含手槍、爆炸、勝利、失敗
 - `js/audio.js`：WebAudio 合成音效
 - `js/music.js`：WebAudio 合成的背景音樂（A 小調軍鼓循環），可在遊戲中開關
-- `js/main.js`：遊戲流程與介面
+- `js/main.js`：遊戲流程與介面（含玩家檔案、教學、排行榜介面）
+- `api/leaderboard.js`：排行榜 API（Vercel Function，資料存在 Upstash Redis）
 - `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png`：網頁圖示（PNG 由 `python tools/make_icons.py` 產生）
 
 ## 部署
 上傳到 GitHub 後，在 Vercel 匯入這個 repo，Framework 選「Other」，不需要 Build Command，輸出目錄用根目錄即可。
+
+### 開通排行榜
+1. 到 Vercel 專案頁 → **Storage**（或 Marketplace）→ 建立 **Upstash Redis** 資料庫（免費方案即可）。
+2. 把它連接到這個專案。Vercel 會自動加入 `KV_REST_API_URL` 與 `KV_REST_API_TOKEN`（或 `UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN`）環境變數。
+3. 重新部署一次（Deployments → 最新一筆 → Redeploy），排行榜就會啟用。

@@ -22,6 +22,7 @@
       <div class="folder-body">
         <div class="brief">
           <h1>暗疫陣地</h1>
+          <p id="welcome" class="welcome hidden"></p>
           <p class="story">一種沒有病徵的病毒混進了陣地。感染者看起來和大家一樣，只有具備專長的隊員能看出端倪。你是這裡的指揮官：讀懂隊員的回報，找出每一個感染者，別傷到自己人。</p>
           <div class="stamp-mark" aria-hidden="true">機密</div>
         </div>
@@ -31,13 +32,19 @@
           <div class="cmd-pick">
             <button class="cmd-opt selected" data-cmd="male">
               <div class="photo"><div class="cmd-art" data-art="male"></div><span class="clip"></span></div>
-              <div class="file-lines"><strong>霍克 少校</strong><span>前線偵防出身，冷靜精準</span></div>
+              <div class="file-lines"><strong data-name="male">霍克 少校</strong><span>前線偵防出身，冷靜精準</span></div>
             </button>
             <button class="cmd-opt" data-cmd="female">
               <div class="photo"><div class="cmd-art" data-art="female"></div><span class="clip"></span></div>
-              <div class="file-lines"><strong>薇拉 少校</strong><span>醫療部隊出身，果斷敏銳</span></div>
+              <div class="file-lines"><strong data-name="female">薇拉 少校</strong><span>醫療部隊出身，果斷敏銳</span></div>
             </button>
           </div>
+          <label class="name-field">
+            <span class="name-label">你的名字</span>
+            <input id="nameInput" type="text" maxlength="10" autocomplete="nickname" spellcheck="false" />
+            <span class="name-rank">少校</span>
+          </label>
+          <p class="name-hint">留空就用預設名字。名字會顯示在對話與排行榜上。</p>
         </div>
 
         <div class="opts">
@@ -69,6 +76,10 @@
         <div class="actions">
           <button id="btnStart" class="primary big">開始作戰</button>
           <button id="btnDaily" class="secondary big">今日任務<small id="dailyInfo"></small></button>
+          <div class="side-actions">
+            <button id="btnTutorial" class="ghost-ink">教學<small id="tutorialInfo"></small></button>
+            <button id="btnBoard" class="ghost-ink">排行榜<small>困難難度</small></button>
+          </div>
         </div>
       </div>
     </div>
@@ -85,6 +96,7 @@
           <button id="btnMusic" class="ghost" aria-pressed="true">音樂開</button>
           <button id="btnMute" class="ghost" aria-pressed="true">音效開</button>
           <button id="btnNew" class="ghost">換一題</button>
+          <button id="btnSkipTut" class="ghost hidden">跳過教學</button>
           <button id="btnMenu" class="ghost">回到簡報</button>
         </div>
       </div>
