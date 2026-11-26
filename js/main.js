@@ -3,6 +3,7 @@ import { ROLE_INFO, roleSVG, unknownSVG, MARK_SVG, clueText } from './art.js';
 import { commanderSVG } from './commander.js';
 import { FX } from './fx.js';
 import { sfx, setMuted, isMuted } from './audio.js';
+import { startMusic, stopMusic, setMusicMuted, isMusicMuted } from './music.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -89,6 +90,7 @@ function enterGame(daily) {
   $('#cmdName').textContent = `指揮官 ${CMD[state.cmd]}`;
   setExpr('neutral');
   newGame(daily);
+  startMusic();
 }
 $('#btnStart').addEventListener('click', () => enterGame(false));
 $('#btnDaily').addEventListener('click', () => enterGame(true));
@@ -100,9 +102,34 @@ $('#btnMenu').addEventListener('click', () => {
   $('#start').classList.remove('hidden');
 });
 $('#btnNew').addEventListener('click', () => !state.busy && newGame(false));
+// 音樂與音效開關（記在瀏覽器裡，下次開啟沿用）
+const SETTINGS_KEY = 'plague-outpost:settings';
+function loadSettings() {
+  try { return { music: true, sfx: true, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)) }; } catch { return { music: true, sfx: true }; }
+}
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ music: !isMusicMuted(), sfx: !isMuted() }));
+}
+function renderAudioBtns() {
+  $('#btnMusic').textContent = isMusicMuted() ? '音樂關' : '音樂開';
+  $('#btnMusic').setAttribute('aria-pressed', String(!isMusicMuted()));
+  $('#btnMute').textContent = isMuted() ? '音效關' : '音效開';
+  $('#btnMute').setAttribute('aria-pressed', String(!isMuted()));
+}
+{
+  const s = loadSettings();
+  setMuted(!s.sfx);
+  // 尚未有使用者操作前不能播放聲音，這裡只記住狀態，進入陣地時才開始播
+  if (!s.music) setMusicMuted(true);
+  renderAudioBtns();
+}
+$('#btnMusic').addEventListener('click', () => {
+  setMusicMuted(!isMusicMuted());
+  saveSettings(); renderAudioBtns();
+});
 $('#btnMute').addEventListener('click', () => {
   setMuted(!isMuted());
-  $('#btnMute').textContent = isMuted() ? '音效關' : '音效開';
+  saveSettings(); renderAudioBtns();
 });
 $('#btnRules').addEventListener('click', showRules);
 $$('.tool').forEach((b) => b.addEventListener('click', () => {
@@ -143,6 +170,7 @@ function newGame(daily) {
     state.daily = null;
     seed = (Math.random() * 1e9) | 0;
   }
+  startMusic(); // 勝敗後音樂會停，新局重新開始
   state.puzzle = generateByDifficulty({ rows, cols, infected: total, difficulty, seed });
   state.marks.clear();
   state.dead.clear();
@@ -376,6 +404,7 @@ async function win() {
   for (const i of state.puzzle.infected) cellEl(i).classList.add('reveal-infected');
   updateStatus();
   say(pick(LINES.win), 'happy');
+  stopMusic(1.2);
   sfx('win');
   if (state.daily) saveDaily(state.daily, 'win', secs);
   const r = $('#board').getBoundingClientRect();
@@ -392,6 +421,7 @@ function lose(wrong) {
   for (const i of state.puzzle.infected) if (!state.dead.has(i)) cellEl(i).classList.add('reveal-infected');
   updateStatus();
   say(pick(LINES.lose), 'grim');
+  stopMusic(0.6);
   sfx('lose');
   fx.defeat();
   if (state.daily) saveDaily(state.daily, 'lose', elapsed());

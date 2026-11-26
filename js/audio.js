@@ -5,6 +5,9 @@ let muted = false;
 export function setMuted(v) { muted = v; }
 export function isMuted() { return muted; }
 
+export function audioCtx() { return ctx(); }
+export function makeNoise(a, dur) { return noise(a, dur); }
+
 function ctx() {
   if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
   if (ac.state === 'suspended') ac.resume();
