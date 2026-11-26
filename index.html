@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>暗疫陣地 · 指揮官推理</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 開始畫面 -->
+  <section id="start" class="screen">
+    <div class="start-card">
+      <p class="kicker">CLASSIFIED · 隔離區 07</p>
+      <h1>暗疫陣地</h1>
+      <p class="story">一種沒有病徵的神祕病毒混進了陣地。只有具備專長的隊員能看出端倪。<br>指揮官，請根據隊員回報，找出所有感染者。</p>
+
+      <h2>選擇指揮官</h2>
+      <div class="cmd-pick">
+        <button class="cmd-opt selected" data-cmd="male">
+          <div class="cmd-art" data-art="male"></div>
+          <strong>霍克 少校</strong><span>冷靜、精準</span>
+        </button>
+        <button class="cmd-opt" data-cmd="female">
+          <div class="cmd-art" data-art="female"></div>
+          <strong>薇拉 少校</strong><span>果斷、敏銳</span>
+        </button>
+      </div>
+
+      <h2>選擇陣地大小</h2>
+      <div class="size-pick">
+        <button class="size-opt selected" data-size="4x4x3">4 × 4<small>3 名感染者</small></button>
+        <button class="size-opt" data-size="5x5x5">5 × 5<small>5 名感染者</small></button>
+        <button class="size-opt" data-size="6x6x7">6 × 6<small>7 名感染者 · 試作</small></button>
+      </div>
+
+      <button id="btnStart" class="primary big">進入陣地</button>
+    </div>
+  </section>
+
+  <!-- 遊戲畫面 -->
+  <section id="game" class="screen hidden">
+    <header class="hud">
+      <div class="brand">暗疫陣地 <span id="seedTag" class="seed"></span></div>
+      <div class="hud-btns">
+        <button id="btnRules" class="ghost">規則</button>
+        <button id="btnMute" class="ghost">音效：開</button>
+        <button id="btnNew" class="ghost">新局</button>
+        <button id="btnMenu" class="ghost">返回選單</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="board-area">
+        <div class="status">
+          <div class="stat"><span>感染者</span><b id="stTotal">0</b></div>
+          <div class="stat"><span>已標記感染</span><b id="stMarked">0</b></div>
+          <div class="stat"><span>已處決</span><b id="stDead">0</b></div>
+          <div class="stat"><span>時間</span><b id="stTime">00:00</b></div>
+        </div>
+        <div id="boardWrap"><div id="board"></div></div>
+        <div class="tools">
+          <div class="tool-group" role="radiogroup" aria-label="標記工具">
+            <button class="tool selected" data-tool="infected"><span class="ico" data-mark="infected"></span>標記感染</button>
+            <button class="tool" data-tool="healthy"><span class="ico" data-mark="healthy"></span>標記健康</button>
+            <button class="tool" data-tool="erase"><span class="ico erase">✕</span>擦除</button>
+          </div>
+          <button id="btnExec" class="danger" disabled>處決已標記感染者</button>
+        </div>
+        <p class="hint">點擊隊員查看技能範圍；點擊「?」格放置標記。右鍵＝標記健康。</p>
+      </section>
+
+      <aside class="side">
+        <div class="commander">
+          <div id="cmdPortrait" class="portrait"></div>
+          <div class="cmd-info">
+            <div id="cmdName" class="cmd-name"></div>
+            <div id="cmdSay" class="say"></div>
+          </div>
+        </div>
+        <div class="legend">
+          <h3>隊員專長</h3>
+          <ul id="legendList"></ul>
+        </div>
+      </aside>
+    </main>
+  </section>
+
+  <canvas id="fx"></canvas>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <h2 id="modalTitle"></h2>
+      <div id="modalBody"></div>
+      <div class="modal-btns" id="modalBtns"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
