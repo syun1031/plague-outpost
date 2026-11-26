@@ -37,6 +37,8 @@ const state = {
   t0: 0,
   timer: null,
   pausedAt: 0, // 暫停開始的時間，0 表示沒有暫停
+  pauses: new Set(), // 目前的暫停原因：'rules'（看規則）、'hidden'（切到其他分頁）
+  timerWasOn: false,
 };
 
 const fx = new FX($('#fx'), $('#boardWrap'));
@@ -97,7 +99,7 @@ $('#btnStart').addEventListener('click', () => enterGame(false));
 $('#btnDaily').addEventListener('click', () => enterGame(true));
 $('#btnMenu').addEventListener('click', () => {
   if (state.busy) return;
-  clearInterval(state.timer);
+  stopTimer();
   renderDailyInfo();
   $('#game').classList.add('hidden');
   $('#start').classList.remove('hidden');
@@ -185,14 +187,17 @@ function newGame(daily) {
   $('#game').classList.remove('lost');
   buildBoard();
   say(state.mode === 'hardcore' ? '硬派模式：必須親手處決全部感染者才算完成。' : pick(LINES.start));
-  clearInterval(state.timer);
+  stopTimer();
   state.pausedAt = 0;
+  state.pauses.clear();
   state.t0 = Date.now();
   state.timer = setInterval(tick, 1000);
   tick();
 }
 
-const elapsed = () => Math.floor((Date.now() - state.t0) / 1000);
+// 暫停中計算時間時，以暫停開始的那一刻為準
+const elapsed = () => Math.floor(((state.pausedAt || Date.now()) - state.t0) / 1000);
+function stopTimer() { clearInterval(state.timer); state.timer = null; }
 function tick() { $('#stTime').textContent = fmt(elapsed()); }
 
 function toast(text) {
@@ -393,7 +398,7 @@ function portraitOrigin() {
 
 async function win() {
   state.over = true;
-  clearInterval(state.timer);
+  stopTimer();
   const secs = elapsed();
   clearRange();
   const rest = [...state.marks].filter(([, v]) => v === 'infected').map(([i]) => i);
@@ -418,7 +423,7 @@ async function win() {
 
 function lose(wrong) {
   state.over = true;
-  clearInterval(state.timer);
+  stopTimer();
   $('#game').classList.add('lost');
   for (const i of state.puzzle.infected) if (!state.dead.has(i)) cellEl(i).classList.add('reveal-infected');
   updateStatus();
@@ -449,24 +454,38 @@ function showModal(title, body, btns) {
 }
 
 // 暫停：停住計時器與背景音樂，繼續時把暫停的時間從計時中扣掉
-function pauseGame() {
-  if (state.over || state.busy || state.pausedAt) return false;
+// 可能同時有多個暫停原因（例如開著規則又切到別的分頁），全部解除才會繼續
+function pauseGame(reason) {
+  // 看規則只在對局進行中、且沒有處決動畫時才算暫停
+  if (reason === 'rules' && (state.over || state.busy || !state.puzzle)) return false;
+  if (state.pauses.has(reason)) return true;
+  state.pauses.add(reason);
+  if (state.pauses.size > 1) return true;
   state.pausedAt = Date.now();
-  clearInterval(state.timer);
+  state.timerWasOn = !!state.timer;
+  stopTimer();
   pauseMusic();
   return true;
 }
-function resumeGame() {
-  if (!state.pausedAt) return;
-  state.t0 += Date.now() - state.pausedAt;
+function resumeGame(reason) {
+  if (!state.pauses.delete(reason) || state.pauses.size) return;
+  if (state.timerWasOn && !state.over) {
+    state.t0 += Date.now() - state.pausedAt;
+    state.timer = setInterval(tick, 1000);
+  }
   state.pausedAt = 0;
-  state.timer = setInterval(tick, 1000);
-  tick();
+  if (state.puzzle) tick();
   resumeMusic();
 }
 
+// 切到其他分頁或縮小視窗時自動暫停，回來後繼續
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) pauseGame('hidden');
+  else resumeGame('hidden');
+});
+
 function showRules() {
-  const paused = pauseGame();
+  const paused = pauseGame('rules');
   showModal(paused ? '作戰規則（已暫停）' : '作戰規則', `
     <ul class="rules">
       <li>盤面上的感染者數量固定，答案只有一種。</li>
@@ -477,5 +496,5 @@ function showRules() {
       <li>一般模式：全部感染者都標記正確就勝利。硬派模式：必須把感染者全部處決。</li>
       <li>處決已標記的感染者時，分散的用手槍，相鄰聚集的用爆破。誤殺健康隊員就失敗。</li>
       <li>難度：簡單只需單一線索；普通要比對兩條線索；困難需要假設與排除。</li>
-    </ul>${paused ? '<p class="pause-note">計時器和音樂已暫停，關閉後繼續。</p>' : ''}`, [[paused ? '繼續作戰' : '了解', resumeGame, 'primary']]);
+    </ul>${paused ? '<p class="pause-note">計時器和音樂已暫停，關閉後繼續。</p>' : ''}`, [[paused ? '繼續作戰' : '了解', () => resumeGame('rules'), 'primary']]);
 }
