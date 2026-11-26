@@ -42,6 +42,7 @@ python -m http.server 5173
 - `js/fx.js`：Canvas 特效，包含手槍、爆炸、勝利、失敗
 - `js/audio.js`：WebAudio 合成音效
 - `js/main.js`：遊戲流程與介面
+- `favicon.svg`、`favicon-32.png`、`apple-touch-icon.png`：網頁圖示（PNG 由 `python tools/make_icons.py` 產生）
 
 ## 部署
 上傳到 GitHub 後，在 Vercel 匯入這個 repo，Framework 選「Other」，不需要 Build Command，輸出目錄用根目錄即可。

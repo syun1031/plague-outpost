@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 網頁圖示：橄欖底＋封鎖黃準星＋紅色感染點 -->
+  <rect width="64" height="64" rx="14" fill="#2f3421"/>
+  <rect x="3" y="3" width="58" height="58" rx="11" fill="none" stroke="#4a5135" stroke-width="2"/>
+  <circle cx="32" cy="32" r="17" fill="none" stroke="#e9b824" stroke-width="5"/>
+  <path d="M32 6v13M32 45v13M6 32h13M45 32h13" stroke="#e9b824" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="7.5" fill="#d6372e" stroke="#1d1b14" stroke-width="2"/>
+  <circle cx="29.5" cy="29.5" r="2" fill="#ff9a8f"/>
+</svg>
