@@ -97,13 +97,14 @@ function enterGame(daily) {
 }
 $('#btnStart').addEventListener('click', () => enterGame(false));
 $('#btnDaily').addEventListener('click', () => enterGame(true));
-$('#btnMenu').addEventListener('click', () => {
+function goMenu() {
   if (state.busy) return;
   stopTimer();
   renderDailyInfo();
   $('#game').classList.add('hidden');
   $('#start').classList.remove('hidden');
-});
+}
+$('#btnMenu').addEventListener('click', goMenu);
 $('#btnNew').addEventListener('click', () => !state.busy && newGame(false));
 // 音樂與音效開關（記在瀏覽器裡，下次開啟沿用）
 const SETTINGS_KEY = 'plague-outpost:settings';
@@ -418,7 +419,7 @@ async function win() {
   fx.victory({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
   const extra = state.daily ? `<p>今日任務完成。明天會有新的一題。</p>` : '';
   setTimeout(() => showModal('陣地淨化完成', `<p>所有感染者都已找出，用時 <b>${fmt(secs)}</b>。</p>${extra}`,
-    [['再來一局', () => newGame(false), 'primary'], ['檢視盤面', null, 'ghost']]), 1200);
+    [['再來一局', () => newGame(false), 'primary'], ['回到簡報', goMenu, 'ghost'], ['檢視盤面', null, 'ghost']]), 1200);
 }
 
 function lose(wrong) {
@@ -435,7 +436,7 @@ function lose(wrong) {
   const names = wrong.map((i) => cellName(Math.floor(i / state.puzzle.cols), i % state.puzzle.cols)).join('、');
   const retry = state.daily ? [['重試今日任務', () => newGame(true), 'primary']] : [['再來一局', () => newGame(false), 'primary']];
   setTimeout(() => showModal('任務失敗', `<p><b>${names}</b> 是健康的隊員。<br>紅框格是真正的感染者位置。</p>`,
-    [...retry, ['檢視盤面', null, 'ghost']]), 1500);
+    [...retry, ['回到簡報', goMenu, 'ghost'], ['檢視盤面', null, 'ghost']]), 1500);
 }
 
 function showModal(title, body, btns) {

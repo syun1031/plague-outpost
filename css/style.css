@@ -284,7 +284,7 @@ button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
 }
 .modal-card h2 { margin: 0 0 10px; font-weight: 900; font-size: 1.6rem; }
 .modal-card p { font-family: var(--serif); line-height: 1.8; }
-.modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.modal-btns { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 16px; }
 .modal-btns .ghost { border-color: rgba(43,40,30,.35); color: var(--ink); }
 .rules { padding-left: 18px; line-height: 1.8; margin: 0; font-family: var(--serif); }
 .pause-note { margin: 12px 0 0; padding: 8px 12px; background: rgba(233,184,36,.25); border-left: 4px solid var(--hazard); font-family: var(--sans); font-weight: 700; }
