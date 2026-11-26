@@ -53,6 +53,7 @@ const state = {
   pausedAt: 0, // 暫停開始的時間，0 表示沒有暫停
   pauses: new Set(), // 目前的暫停原因：'rules'（看規則）、'hidden'（切到其他分頁）
   timerWasOn: false,
+  finalSecs: null, // 對局結束時定格的用時，結束後畫面與紀錄都用這個值
 };
 
 const fx = new FX($('#fx'), $('#boardWrap'));
@@ -297,6 +298,7 @@ function newGame(kind = 'normal', level = 1) {
   say(kind === 'tutorial' ? TUT_TIPS[mustInclude]
     : state.playMode === 'hardcore' ? '硬派模式：必須親手處決全部感染者才算完成。' : pick(LINES.start));
   stopTimer();
+  state.finalSecs = null;
   state.pausedAt = 0;
   if (state.pauses.size) { state.pauses.clear(); resumeMusic(); }
   state.t0 = Date.now();
@@ -308,8 +310,16 @@ function newGame(kind = 'normal', level = 1) {
   }
 }
 
-// 暫停中計算時間時，以暫停開始的那一刻為準
-const elapsed = () => Math.floor(((state.pausedAt || Date.now()) - state.t0) / 1000);
+// 對局結束後用定格的用時；暫停中以暫停開始的那一刻為準
+const elapsed = () => state.finalSecs ?? Math.floor(((state.pausedAt || Date.now()) - state.t0) / 1000);
+// 結束對局時呼叫：停止計時並把用時定格
+function freezeTime() {
+  const secs = elapsed();
+  stopTimer();
+  state.finalSecs = secs;
+  tick();
+  return secs;
+}
 function stopTimer() { clearInterval(state.timer); state.timer = null; }
 function tick() { $('#stTime').textContent = fmt(elapsed()); }
 
@@ -511,8 +521,7 @@ function portraitOrigin() {
 
 async function win() {
   state.over = true;
-  stopTimer();
-  const secs = elapsed();
+  const secs = freezeTime();
   clearRange();
   const rest = [...state.marks].filter(([, v]) => v === 'infected').map(([i]) => i);
   if (rest.length) {
@@ -544,7 +553,7 @@ async function win() {
 
 function lose(wrong) {
   state.over = true;
-  stopTimer();
+  freezeTime();
   $('#game').classList.add('lost');
   for (const i of state.puzzle.infected) if (!state.dead.has(i)) cellEl(i).classList.add('reveal-infected');
   updateStatus();
@@ -581,7 +590,8 @@ function showModal(title, body, btns, { wide = false } = {}) {
 // 可能同時有多個暫停原因（例如開著規則又切到別的分頁），全部解除才會繼續
 function pauseGame(reason) {
   // 看規則只在對局進行中、且沒有處決動畫時才算暫停
-  if (reason === 'rules' && (state.over || state.busy || !state.puzzle)) return false;
+  if (state.over || !state.puzzle) return false;
+  if (reason === 'rules' && state.busy) return false;
   if (state.pauses.has(reason)) return true;
   state.pauses.add(reason);
   if (state.pauses.size > 1) return true;
