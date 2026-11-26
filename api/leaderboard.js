@@ -14,8 +14,14 @@ const MODES = new Set(['normal', 'hardcore']);
 const TOP = 20;
 const KEEP = 500; // 每個排行榜最多保留的人數
 
-const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+// 連接資料庫時可自訂前綴（KV、STORAGE…），所以除了常見名稱外，也找任何 *_REST_API_URL / *_REST_API_TOKEN
+function findEnv(names, suffix) {
+  for (const n of names) if (process.env[n]) return process.env[n];
+  const k = Object.keys(process.env).find((key) => key.endsWith(suffix) && !key.includes('READ_ONLY'));
+  return k ? process.env[k] : undefined;
+}
+const REDIS_URL = findEnv(['KV_REST_API_URL', 'UPSTASH_REDIS_REST_URL', 'STORAGE_REST_API_URL'], '_REST_API_URL');
+const REDIS_TOKEN = findEnv(['KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_TOKEN', 'STORAGE_REST_API_TOKEN'], '_REST_API_TOKEN');
 
 async function redis(commands) {
   const res = await fetch(`${REDIS_URL}/pipeline`, {
