@@ -100,6 +100,7 @@ $('#btnDaily').addEventListener('click', () => enterGame(true));
 function goMenu() {
   if (state.busy) return;
   stopTimer();
+  stopMusic(0.8); // 簡報畫面不播音樂，進入陣地時重新開始
   renderDailyInfo();
   $('#game').classList.add('hidden');
   $('#start').classList.remove('hidden');
