@@ -1,6 +1,6 @@
 // 背景音樂：WebAudio 即時合成的緊張軍事氛圍循環（不需音檔、無版權問題）
 // 結構：A 小調 8 小節循環，層次為低音鋪底、和弦長音、軍鼓節奏、稀疏的琶音
-import { audioCtx, makeNoise } from './audio.js';
+import { audioCtx, makeNoise, holdAudio, releaseAudio } from './audio.js';
 
 const BPM = 84;
 const BEAT = 60 / BPM;
@@ -59,6 +59,7 @@ export function startMusic() {
 export function stopMusic(fade = 1) {
   if (!playing) return;
   playing = false;
+  if (paused) { paused = false; releaseAudio(); }
   clearInterval(timer);
   const a = audioCtx();
   const g = master;
@@ -66,6 +67,19 @@ export function stopMusic(fade = 1) {
   g.gain.setValueAtTime(Math.max(g.gain.value, 0.0001), a.currentTime);
   g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + fade);
   setTimeout(() => g.disconnect(), (fade + 0.2) * 1000);
+}
+
+// 暫停／繼續：直接暫停整個音訊時鐘，音樂會從停下的地方接著播
+let paused = false;
+export function pauseMusic() {
+  if (!playing || paused) return;
+  paused = true;
+  holdAudio();
+}
+export function resumeMusic() {
+  if (!paused) return;
+  paused = false;
+  releaseAudio();
 }
 
 function schedule() {

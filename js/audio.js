@@ -8,9 +8,15 @@ export function isMuted() { return muted; }
 export function audioCtx() { return ctx(); }
 export function makeNoise(a, dur) { return noise(a, dur); }
 
+// 暫停期間 held = true：任何地方取用音訊都不會把它自動恢復
+let held = false;
+export function holdAudio() { held = true; if (ac) ac.suspend(); }
+export function releaseAudio() { held = false; if (ac) ac.resume(); }
+export function audioState() { return ac ? ac.state : 'none'; }
+
 function ctx() {
   if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
-  if (ac.state === 'suspended') ac.resume();
+  if (ac.state === 'suspended' && !held) ac.resume();
   return ac;
 }
 

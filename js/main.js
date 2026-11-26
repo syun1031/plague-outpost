@@ -3,7 +3,7 @@ import { ROLE_INFO, roleSVG, unknownSVG, MARK_SVG, clueText } from './art.js';
 import { commanderSVG } from './commander.js';
 import { FX } from './fx.js';
 import { sfx, setMuted, isMuted } from './audio.js';
-import { startMusic, stopMusic, setMusicMuted, isMusicMuted } from './music.js';
+import { startMusic, stopMusic, setMusicMuted, isMusicMuted, pauseMusic, resumeMusic } from './music.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -36,6 +36,7 @@ const state = {
   over: false,
   t0: 0,
   timer: null,
+  pausedAt: 0, // 暫停開始的時間，0 表示沒有暫停
 };
 
 const fx = new FX($('#fx'), $('#boardWrap'));
@@ -185,6 +186,7 @@ function newGame(daily) {
   buildBoard();
   say(state.mode === 'hardcore' ? '硬派模式：必須親手處決全部感染者才算完成。' : pick(LINES.start));
   clearInterval(state.timer);
+  state.pausedAt = 0;
   state.t0 = Date.now();
   state.timer = setInterval(tick, 1000);
   tick();
@@ -446,8 +448,26 @@ function showModal(title, body, btns) {
   $('#modal').classList.remove('hidden');
 }
 
+// 暫停：停住計時器與背景音樂，繼續時把暫停的時間從計時中扣掉
+function pauseGame() {
+  if (state.over || state.busy || state.pausedAt) return false;
+  state.pausedAt = Date.now();
+  clearInterval(state.timer);
+  pauseMusic();
+  return true;
+}
+function resumeGame() {
+  if (!state.pausedAt) return;
+  state.t0 += Date.now() - state.pausedAt;
+  state.pausedAt = 0;
+  state.timer = setInterval(tick, 1000);
+  tick();
+  resumeMusic();
+}
+
 function showRules() {
-  showModal('作戰規則', `
+  const paused = pauseGame();
+  showModal(paused ? '作戰規則（已暫停）' : '作戰規則', `
     <ul class="rules">
       <li>盤面上的感染者數量固定，答案只有一種。</li>
       <li>有專長的隊員一定健康，回報一定正確。</li>
@@ -457,5 +477,5 @@ function showRules() {
       <li>一般模式：全部感染者都標記正確就勝利。硬派模式：必須把感染者全部處決。</li>
       <li>處決已標記的感染者時，分散的用手槍，相鄰聚集的用爆破。誤殺健康隊員就失敗。</li>
       <li>難度：簡單只需單一線索；普通要比對兩條線索；困難需要假設與排除。</li>
-    </ul>`, [['了解', null, 'primary']]);
+    </ul>${paused ? '<p class="pause-note">計時器和音樂已暫停，關閉後繼續。</p>' : ''}`, [[paused ? '繼續作戰' : '了解', resumeGame, 'primary']]);
 }
